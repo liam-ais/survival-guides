@@ -1,286 +1,160 @@
 # Git — Commandes
 
-## Configuration
+Cette partie regroupe les commandes vues pendant mon apprentissage de Git. Elles sont classées par utilisation afin de les retrouver plus facilement.
+
+Les explications des différentes notions se trouvent dans [concepts.md](concepts.md). Les valeurs entre chevrons, comme `<url>`, sont à remplacer sans conserver les chevrons.
+
+## 1. Initialiser un dépôt et enregistrer des modifications
+
+| Commande | Rôle |
+| --- | --- |
+| `git init` | Initialiser un dépôt local. |
+| `git status` | Vérifier l’état des fichiers. |
+| `git add .` | Préparer les ajouts, modifications et suppressions sous le répertoire courant. |
+| `git commit -m "message"` | Enregistrer un commit avec le message indiqué par l’option `-m`. |
+| `git log` | Consulter l’historique des commits. |
+
+Pour enregistrer les modifications, nous commençons par les préparer, puis nous créons un commit :
 
 ```bash
-# Définir le nom et email (nécessaire pour les commits)
-git config --global user.name "Mon Nom"
-git config --global user.email "mon@email.com"
-
-# Définir l'éditeur par défaut
-git config --global core.editor "code --wait"
-
-# Définir la branche par défaut pour git push
-git config --global push.autoSetupRemote true
-# push.autoSetupRemote → configure automatiquement le tracking au premier push
-
-# Afficher toute la config
-git config --list
-```
-
-## Dépôt et initialization
-
-```bash
-# Créer un nouveau dépôt
-git init
-# Crée le dossier .git/ dans le répertoire courant
-
-# Cloner un dépôt distant
-git clone https://github.com/user/repo.git
-# Clone le dépôt + configure le remote "origin"
-
-# Cloner dans un dossier spécifique
-git clone https://github.com/user/repo.git mon-dossier
-```
-
-## Ajouter et commit
-
-```bash
-# Ajouter un fichier au staging
-git add fichier.txt
-# Ajoute le fichier pour le prochain commit
-
-# Ajouter tous les fichiers modifiés/nouveaux
 git add .
-# Le point = tous les fichiers du répertoire courant et sous-dossiers
-
-# Ajouter tous les fichiers .js modifiés
-git add "*.js"
-
-# Voir l'état du staging
-git status
-
-# Voir les modifications en attente
-git diff             # différences entre working directory et staging
-git diff --staged    # différences entre staging et dernier commit
-
-# Committer les fichiers staged
-git commit -m "Ajouter la page d'accueil"
-# -m → permet de passer le message directement en argument
-
-# Committer avec un message multi-lignes
-git commit
-# Ouvre l'éditeur pour écrire un message détaillé
-
-# Ajouter et committer en une seule commande (pour les fichiers déjà trackés)
-git commit -am "Corriger le bug de login"
-# -a → ajoute tous les fichiers modifiés (pas les nouveaux fichiers)
-# -m → message direct
-
-# Modifier le dernier commit (message + fichiers)
-git commit --amend -m "Nouveau message"
-# Réécrit le dernier commit (utile avant de push)
+git commit -m "Mise à jour de la documentation"
 ```
 
-## Branches
+## 2. Utiliser un dépôt distant
+
+| Commande | Rôle |
+| --- | --- |
+| `git clone <url>` | Copier un dépôt distant en local. |
+| `git remote add origin <url>` | Ajouter un dépôt distant nommé `origin`. |
+| `git remote -v` | Afficher les dépôts distants et leurs URL. |
+| `git push` | Envoyer les commits selon la configuration de la branche. |
+| `git push -u origin feature` | Envoyer la branche `feature` sur `origin` et configurer son suivi distant avec `-u`. |
+| `git pull` | Récupérer et intégrer les changements selon la configuration. |
+| `git pull origin main` | Récupérer `main` depuis `origin` et l’intégrer dans la branche courante. |
+| `git fetch` | Récupérer les changements distants sans les intégrer à la branche courante. |
+
+Après un clone, `origin` est déjà configuré. Il n’est donc pas nécessaire de l’ajouter à nouveau.
+
+Pour mettre à jour la branche locale `main`, nous nous plaçons d’abord dessus :
 
 ```bash
-# Lister les branches locales
-git branch
-
-# Lister toutes les branches (locales + distantes)
-git branch -a
-
-# Créer une nouvelle branche
-git branch feature/login
-# Crée la branche mais ne switch pas dessus
-
-# Créer et switcher sur une nouvelle branche
-git checkout -b feature/login
-# -b → crée la branche + switch automatiquement
-
-# Switcher de branche
 git checkout main
-# OU (plus récent)
-git switch main
-
-# Renommer une branche
-git branch -m ancien-nom nouveau-nom
-
-# Supprimer une branche (locale)
-git branch -d feature/login
-# -d → supprime seulement si la branche est fusionnée
-
-# Forcer la suppression d'une branche
-git branch -D feature/login
-# -D → force la suppression même non fusionnée
-
-# Supprimer une branche distante
-git push origin --delete feature/login
+git pull origin main
 ```
 
-## Merge et rebase
+## 3. Créer et changer de branche
+
+| Commande | Rôle |
+| --- | --- |
+| `git branch` | Lister les branches locales. |
+| `git branch feature` | Créer la branche `feature` sans changer de branche. |
+| `git checkout feature` | Se placer sur `feature`. |
+| `git checkout -b feature` | Créer `feature` et se placer dessus avec l’option `-b`. |
+| `git switch feature` | Se placer sur `feature`, avec une commande dédiée au changement de branche. |
+| `git switch -c feature` | Créer `feature` et se placer dessus avec l’option `-c`. |
+| `git branch -d feature` | Supprimer une branche locale fusionnée, selon les vérifications effectuées par Git. |
+
+Pour créer une branche et commencer à travailler dessus, nous pouvons choisir l’une de ces deux commandes :
 
 ```bash
-# Fusionner une branche dans la branche courante
-git merge feature/login
-# Crée un commit de fusion (merge commit) si les historiques ont divergé
+git checkout -b feature
+```
 
-# Fusionner sans commit de fusion (fast-forward)
-git merge --ff-only feature/login
-# Ne fonctionne que si la branche courante est un ancestor direct
+Ou :
 
-# Rebase la branche courante sur main
+```bash
+git switch -c feature
+```
+
+Il n’est pas nécessaire d’exécuter les deux : elles répondent ici au même besoin.
+
+## 4. Fusionner une branche
+
+Pour fusionner `feature` dans `main` :
+
+```bash
+git checkout main
+git merge feature
+```
+
+La première commande peut aussi être remplacée par `git switch main`.
+
+En cas de conflit, nous corrigeons les fichiers concernés puis nous terminons la fusion :
+
+```bash
+git add .
+git commit
+```
+
+## 5. Rebase et rebase interactif
+
+Pour rejouer les commits de `feature` sur la version locale de `main` :
+
+```bash
+git checkout feature
 git rebase main
-# Rejoue tes commits au-dessus de main (historique linéaire)
-
-# Continuer après un conflit de rebase
-git rebase --continue
-# Après avoir résolu les conflits, continue le rebase
-
-# Annuler un rebase en cours
-git rebase --abort
-
-# Annuler un merge en cours
-git merge --abort
 ```
 
-## Conflits
+Pour modifier les trois derniers commits avec un rebase interactif :
 
 ```bash
-# Les conflits sont marqués dans les fichiers :
-<<<<<<< HEAD
-contenu de la branche courante
-=======
-contenu de l'autre branche
->>>>>>> feature
-
-# Après avoir résolu les conflits (édité les fichiers) :
-git add fichier.txt
-git commit   # termine le merge/rebase
+git rebase -i HEAD~3
 ```
 
-## Push et pull
+- `-i` ouvre le mode interactif.
+- `HEAD~3` désigne le commit situé trois générations avant `HEAD` en suivant le premier parent ; dans un historique simple, cela permet de reprendre les trois derniers commits.
+- Dans la liste, `pick`, `reword`, `squash` et `drop` permettent de choisir ce que nous souhaitons faire avec les commits.
+
+Attention : éviter de rebaser des commits déjà partagés sans se coordonner avec les autres contributeurs.
+
+## 6. Récupérer un commit avec cherry-pick
+
+Pour appliquer les modifications d’un commit précis sur `main` :
 
 ```bash
-# Pousser les commits vers le remote
-git push
-# Pousse la branche courante vers le remote (tracking configuré)
-
-# Pousser en créant la branche distante
-git push -u origin feature/login
-# -u → configure le tracking pour les prochains push/pull
-
-# Tirer les changements du remote (fetch + merge)
-git pull
-# Récupère les changements distants et les fusionne dans la branche courante
-
-# Récupérer sans fusionner (fetch)
-git fetch
-# Met à jour les refs distants sans toucher au working directory
-
-# Voir les différences avant de merge
-git fetch origin
-git log HEAD..origin/main
-# Affiche les commits qui sont sur origin/main mais pas chez toi
+git checkout main
+git cherry-pick <commit-hash>
 ```
 
-## Historique
+`<commit-hash>` correspond à l’identifiant du commit, que nous pouvons retrouver avec `git log`.
+
+## 7. Revenir en arrière avec reset
+
+Dans les commandes suivantes, `HEAD~1` désigne le commit précédent.
+
+| Commande | Résultat |
+| --- | --- |
+| `git reset --soft HEAD~1` | Retirer le dernier commit de la branche et garder les modifications préparées. |
+| `git reset --mixed HEAD~1` | Retirer le dernier commit de la branche et garder les modifications hors de la Staging Area. |
+| `git reset --hard HEAD~1` | Revenir au commit précédent en remettant l’index et les fichiers suivis dans son état. |
+
+Attention : `--hard` peut supprimer les modifications locales concernées. Cette option est à utiliser seulement si nous sommes sûrs de ne pas vouloir les conserver.
+
+## 8. Annuler un commit avec revert
 
 ```bash
-# Afficher l'historique
-git log
-
-# Historique compact (1 ligne par commit)
-git log --oneline
-
-# Historique avec graphique
-git log --oneline --graph --all
-# --graph → affiche les branches et merges en ASCII art
-# --all   → affiche toutes les branches
-
-# Afficher les changements d'un commit
-git show a1b2c3d
-
-# Chercher un commit par message
-git log --grep="bug fix"
-
-# Chercher un commit qui a modifié un fichier
-git log -- path/fichier.txt
+git revert <commit-hash>
 ```
 
-## Stash
+Cette commande crée un nouveau commit qui annule les modifications du commit ciblé. Elle est à privilégier pour annuler un commit déjà partagé.
+
+## 9. Mettre les modifications de côté
+
+| Commande | Rôle |
+| --- | --- |
+| `git stash` | Mettre temporairement de côté les modifications des fichiers suivis. |
+| `git stash list` | Afficher les stash disponibles. |
+| `git stash pop` | Restaurer le dernier stash et le retirer si l’application réussit. |
+| `git stash apply` | Restaurer le dernier stash sans le retirer. |
+| `git stash -u` | Inclure aussi les nouveaux fichiers non suivis, hors fichiers ignorés. |
+
+## 10. Retrouver les anciennes positions de HEAD
 
 ```bash
-# Mettre de côté les modifications en cours
-git stash
-# Sauvegarde les changements et nettoie le working directory
-
-# Mettre de côté avec un nom
-git stash push -m "WIP: feature login"
-
-# Lister les stashs
-git stash list
-
-# Restaurer le dernier stash
-git stash pop
-# Applique le stash ET le supprime de la pile
-
-# Restaurer sans supprimer
-git stash apply
-
-# Supprimer un stash
-git stash drop stash@{0}
-
-# Vider tous les stashs
-git stash clear
+git reflog
 ```
 
-## Annulation
+Cette commande affiche les déplacements locaux de `HEAD`. Elle peut être utile pour retrouver un commit après un reset ou un rebase, tant qu’il est encore disponible dans le dépôt.
 
-```bash
-# Annuler un fichier (revenir au dernier commit)
-git checkout -- fichier.txt
-# OU (plus récent)
-git restore fichier.txt
-
-# Retirer un fichier du staging (garder les modifications)
-git reset HEAD fichier.txt
-# OU (plus récent)
-git restore --staged fichier.txt
-
-# Réinitialiser à un commit spécifique (garde les modifications)
-git reset --soft HEAD~1
-# --soft → annule le dernier commit, garde les fichiers staged
-
-# Réinitialiser à un commit spécifique (garde les fichiers non-stagés)
-git reset HEAD~1
-# (sans --soft ni --hard) → annule le commit, garde les modifications dans le working directory
-
-# Réinitialiser complètement (SUPPRIME les modifications !)
-git reset --hard HEAD~1
-# --hard → supprime TOUT (commit + modifications). IRRÉVERSIBLE.
-
-# Annuler un commit déjà poussé (créé un commit inverse)
-git revert a1b2c3d
-# Crée un NOUVEAU commit qui annule les changements du commit ciblé
-# Sûr car ne réécris pas l'historique
-```
-
-## Tags
-
-```bash
-# Créer un tag léger
-git tag v1.0.0
-# Tag le commit courant
-
-# Créer un tag annoté (recommandé)
-git tag -a v1.0.0 -m "Release v1.0.0"
-# -a → annotated tag avec message
-
-# Lister les tags
-git tag
-
-# Pousser un tag
-git push origin v1.0.0
-
-# Pousser tous les tags
-git push origin --tags
-
-# Supprimer un tag
-git tag -d v1.0.0
-# Supprime le tag local
-
-git push origin --delete v1.0.0
-# Supprime le tag distant
-```
+[Retour au README](README.md) · [Consulter les concepts](concepts.md)

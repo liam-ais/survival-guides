@@ -1,166 +1,193 @@
 # Git — Concepts
 
-## Les 3 zones de Git
+Cette partie reprend les notions que j’ai apprises sur KodeKloud. Pour chaque notion, nous allons voir à quoi elle sert et les points à retenir pour son utilisation.
 
-```
-Répertoire de travail (Working Directory)
-        │
-        │  git add
-        ▼
-Zone de préparation (Staging Area / Index)
-        │
-        │  git commit
-        ▼
-Historique (Repository / HEAD)
-```
+Les commandes correspondantes sont regroupées dans [commandes.md](commandes.md).
+
+## 1. Fonctionnement de Git
+
+Git est un système de gestion de versions. Il permet de suivre les modifications des fichiers, de conserver les anciennes versions et de travailler à plusieurs sur un même projet.
+
+Il faut bien différencier Git de GitHub : Git est l’outil utilisé pour gérer les versions, alors que GitHub, GitLab et Gitea sont des plateformes d’hébergement de dépôts.
+
+### Les trois zones
 
 | Zone | Description |
-|------|-------------|
-| **Working Directory** | Tes fichiers tels qu'ils existent sur ton disque |
-| **Staging Area** | Fichiers prêts à être commités (sélectionnés avec `git add`) |
-| **Repository** | Historique complet des commits (`.git/`) |
+| --- | --- |
+| Working Directory | Répertoire de travail contenant les fichiers que nous modifions. |
+| Staging Area | Zone de préparation contenant les modifications sélectionnées avec `git add`. |
+| Local Repository | Dépôt local contenant l’historique des commits, stocké dans le dossier `.git`. |
 
-## Le commit
+Lorsque nous modifions un fichier, les changements se trouvent dans le répertoire de travail. Nous utilisons ensuite `git add` pour les préparer, puis `git commit` pour enregistrer un état du projet dans l’historique local.
 
-Un commit est un **snapshot** (instantané) de tous les fichiers à un instant T. Chaque commit a :
-- Un **SHA-1** unique (identifiant hash, ex: `a1b2c3d`)
-- Un **message** décrivant le changement
-- Un **pointeur vers le commit parent** (sauf le premier commit)
-- L'**auteur** et la **date**
+Si le fichier est modifié après le `git add`, il faudra refaire cette commande pour prendre en compte les dernières modifications dans le prochain commit.
 
-## Branches
+### Les échanges entre les zones
 
-Une branche est un **pointeur mobile** vers un commit. `main` (ou `master`) est la branche par défaut.
+Pour un nouveau projet, nous utilisons `git init` afin de créer le dépôt local. Si nous récupérons un dépôt existant avec `git clone`, cette initialisation est déjà faite.
 
-```
-main:    A → B → C → D
-                  \
-feature:           E → F
-```
+Une fois le dépôt créé, voici comment circulent les modifications :
 
-- Créer une branche = créer un pointeur vers le commit courant
-- Fusionner une branche = combiner les historiques
-- Supprimer une branche = supprimer le pointeur (les commits restent tant qu'ils sont atteignables)
-
-## Merge vs Rebase
-
-### Merge
-
-```bash
-git merge feature
+```mermaid
+flowchart TD
+    A["Répertoire de travail — fichiers modifiés"]
+    B["Staging Area — modifications préparées"]
+    C["Dépôt local — historique des commits"]
+    D["Dépôt distant — GitHub, GitLab ou Gitea"]
+    A -->|git add| B
+    B -->|git commit| C
+    C -->|git push| D
+    D -->|git pull : récupérer et intégrer| A
 ```
 
-Crée un **commit de fusion** qui combine les deux branches. L'historique est conservé tel quel.
+Nous utilisons `git add` pour préparer les modifications, puis `git commit` pour les enregistrer localement. Avec `git push`, nous envoyons les commits vers le dépôt distant, qui doit être configuré.
 
-```
-main:    A → B → C ──→ M (merge commit)
-                  \   /
-feature:           E → F
-```
+Dans l’autre sens, `git pull` récupère les changements distants et les intègre à notre branche locale. La flèche vers le répertoire de travail représente le résultat de cette intégration : le dépôt local est également mis à jour. Il ne s’agit donc pas d’une simple copie de fichiers.
+
+### HEAD
+
+`HEAD` représente notre position actuelle dans l’historique. Il pointe généralement vers la branche sur laquelle nous travaillons et permet ainsi de retrouver son dernier commit.
+
+### Le fichier .gitignore
+
+Le fichier `.gitignore` permet d’indiquer les fichiers ou dossiers que nous ne souhaitons pas suivre avec Git.
+
+Cela ne concerne que les fichiers qui ne sont pas déjà suivis. Ajouter un fichier déjà versionné dans `.gitignore` ne suffit donc pas à arrêter son suivi.
+
+## 2. Branches et merge
+
+Une branche permet de travailler sur une fonctionnalité ou une modification séparément de la branche principale, généralement appelée `main` ou `master`.
+
+Une fois les modifications terminées, nous pouvons les intégrer à une autre branche avec un merge.
+
+Par exemple, pour intégrer une branche `feature` dans `main`, il faut d’abord se placer sur `main`, puis lancer `git merge feature`. La fusion se fait donc dans la branche sur laquelle nous sommes positionnés.
+
+### Checkout ou switch
+
+Pour changer de branche, nous pouvons utiliser `git checkout` ou `git switch`.
+
+| Besoin | Avec checkout | Avec switch |
+| --- | --- | --- |
+| Aller sur une branche existante | `git checkout feature` | `git switch feature` |
+| Créer une branche et aller dessus | `git checkout -b feature` | `git switch -c feature` |
+
+Les deux permettent ici d’obtenir le même résultat. `git switch` est dédié au changement de branche, alors que `git checkout` possède aussi d’autres usages.
+
+### Conflits de fusion
+
+Un conflit apparaît lorsque Git ne peut pas fusionner automatiquement les modifications. Il faut alors ouvrir les fichiers concernés, corriger le contenu et retirer les marqueurs de conflit.
+
+Une fois les corrections effectuées, nous utilisons `git add` pour préparer les fichiers, puis `git commit` pour terminer la fusion.
+
+## 3. Dépôts distants et collaboration
+
+Un dépôt distant est un dépôt partagé, hébergé par exemple sur GitHub, GitLab ou Gitea. Il permet d’envoyer son travail et de récupérer celui des autres contributeurs.
+
+| Notion | Rôle |
+| --- | --- |
+| Clone | Copier un dépôt distant en local. |
+| Push | Envoyer les commits locaux vers le dépôt distant. |
+| Fetch | Récupérer les changements distants sans les intégrer à la branche courante. |
+| Pull | Récupérer les changements distants et les intégrer à la branche courante. |
+
+La différence entre `fetch` et `pull` est donc l’intégration des changements. Avec `fetch`, nous récupérons les informations sans modifier directement notre branche de travail. Avec `pull`, nous récupérons et intégrons les changements, par fusion ou rebase selon les options et la configuration.
+
+### Origin et upstream
+
+`origin` est le nom conventionnel du dépôt distant principal. Il est configuré automatiquement lorsque nous clonons un dépôt.
+
+Dans le cas d’un fork :
+
+- `origin` correspond généralement à notre fork, si c’est celui que nous avons cloné.
+- `upstream` correspond au dépôt original, si nous l’avons ajouté à la configuration.
+
+### Fork
+
+Un fork est une copie d’un dépôt sur son propre compte. Cela permet notamment de contribuer à un projet sans avoir directement les droits d’écriture sur le dépôt original.
+
+### Pull Request
+
+Une Pull Request permet de proposer la fusion d’une branche et de faire vérifier les modifications avant leur intégration.
+
+Nous créons une branche, enregistrons les modifications avec des commits, puis envoyons cette branche sur le dépôt distant. Nous pouvons ensuite ouvrir une Pull Request sur la plateforme pour demander une revue avant la fusion.
+
+## 4. Rebase et cherry-pick
 
 ### Rebase
 
-```bash
-git merge feature
-```
+Le rebase permet de rejouer les commits d’une branche sur une nouvelle base. Il est utile pour obtenir un historique plus linéaire.
 
-Rejoue les commits de la branche `feature` par-dessus `main`. L'historique est linéaire.
+Avec `git rebase main` depuis la branche `feature`, les commits propres à `feature` sont rejoués à partir de la version locale de `main`.
 
-```
-main:    A → B → C → E' → F'
-                  (commits re-joués)
-```
+### Rebase interactif
 
-| | Merge | Rebase |
-|---|---|---|
-| Historique | Conserve la structure réelle | Linéaire, propre |
-| Commits de fusion | Oui (commit `M`) | Non |
-| Sécurité | Toujours sûr | Ne jamais rebase une branche publique |
-| Utilisation | Intégrer une feature dans main | Mettre à jour sa feature depuis main |
+Le rebase interactif permet de modifier ou de nettoyer plusieurs commits. Nous pouvons conserver un commit, modifier son message, le regrouper avec un autre ou le supprimer de l’historique rejoué.
 
-## HEAD
+| Option | Rôle |
+| --- | --- |
+| `pick` | Garder le commit. |
+| `reword` | Modifier son message. |
+| `squash` | Regrouper le commit avec le précédent dans la liste. |
+| `drop` | Supprimer le commit de l’historique rejoué. |
 
-`HEAD` est un pointeur vers le commit courant (la branche sur laquelle tu es).
+Attention : le rebase réécrit les commits concernés. Il faut donc éviter de rebaser des commits déjà partagés avec d’autres personnes sans se coordonner avec elles.
 
-- `HEAD` → pointe vers la branche actuelle
-- `HEAD~1` → le commit parent (un en arrière)
-- `HEAD~3` → 3 commits en arrière
-- **Detached HEAD** : `HEAD` pointe directement vers un commit (pas vers une branche) — dangereux car les nouveaux commits ne seront sur aucune branche
+### Cherry-pick
 
-## Le stash
+Le cherry-pick permet de reprendre les modifications d’un commit précis sur la branche actuelle, sans fusionner toute la branche d’origine.
 
-Le stash met de côté les modifications en cours sans commit :
+| Opération | À retenir |
+| --- | --- |
+| Merge | Fusionner les historiques. |
+| Rebase | Rejouer les commits sur une nouvelle base. |
+| Cherry-pick | Reprendre les modifications d’un commit précis. |
 
-```
-Working Directory → Stash (pile LIFO)
-```
+## 5. Reset et revert
 
-- Utile quand tu dois switcher de branche rapidement
-- Les stashs s'empilent (dernier stash = premier sorti)
+### Reset
 
-## Les tags
+Le reset permet de revenir à un ancien commit en déplaçant le pointeur de la branche. Son effet sur les modifications dépend de l’option utilisée.
 
-Un tag est un **pointeur immobile** vers un commit (contrairement aux branches qui bougent).
+Pour revenir au commit précédent :
 
-- **Lightweight tag** : juste un nom qui pointe vers un commit
-- **Annotated tag** : tag avec message, auteur, date (recommandé pour les releases)
+| Option | Effet |
+| --- | --- |
+| `--soft` | Retire le dernier commit de la branche et conserve les modifications dans la Staging Area. |
+| `--mixed` | Retire le dernier commit de la branche et conserve les modifications dans les fichiers, hors de la Staging Area. |
+| `--hard` | Remet l’index et les fichiers suivis à l’état du commit ciblé. Les modifications locales concernées sont perdues. |
 
-## Les hooks
+Attention : `--hard` peut entraîner une perte de travail. Il faut vérifier ce que nous souhaitons conserver avant de l’utiliser.
 
-Scripts déclenchés automatiquement par Git à différents moments :
+### Revert
 
-| Hook | Déclenché quand |
-|------|----------------|
-| `pre-commit` | Avant de finaliser un commit |
-| `commit-msg` | Après avoir tapé le message de commit |
-| `pre-push` | Avant de pousser vers un remote |
-| `post-merge` | Après un merge réussi |
+Le revert permet d’annuler les modifications d’un commit en créant un nouveau commit. Le commit d’origine reste présent dans l’historique.
 
-Les hooks se trouvent dans `.git/hooks/`. Exemples d'usage :
-- `pre-commit` : lancer le linter/formatter automatiquement
-- `commit-msg` : vérifier le format du message de commit
+La différence principale est donc que `reset` modifie la position de la branche, alors que `revert` ajoute un commit d’annulation. Pour un commit déjà partagé, il est préférable d’utiliser `revert`.
 
-## Les remotes
+## 6. Stash
 
-Un remote est un dépôt distant (GitHub, GitLab...).
+Le stash permet de mettre temporairement ses modifications de côté sans faire de commit sur la branche. C’est utile lorsque nous devons changer de branche alors que notre travail n’est pas terminé.
 
-- `origin` → remote par défaut (le dépôt d'origine)
-- `upstream` → convention pour le dépôt original d'un fork
+Par défaut, `git stash` prend en compte les modifications des fichiers suivis. Pour inclure également les nouveaux fichiers non suivis, nous utilisons `git stash -u`. Les fichiers ignorés ne sont pas inclus avec cette option.
 
-```bash
-# Lister les remotes
-git remote -v
+Pour reprendre le travail :
 
-# Ajouter un remote
-git remote add upstream https://github.com/original/repo.git
-```
+- `git stash apply` restaure les modifications et conserve le stash.
+- `git stash pop` restaure les modifications et retire le stash si l’application réussit.
 
-## `.gitignore`
+L’application d’un stash peut provoquer des conflits. Si `pop` rencontre un conflit, le stash est conservé.
 
-Fichier qui indique à Git quels fichiers ignorer :
+## 7. Reflog
 
-```gitignore
-# Dépendances
-node_modules/
-vendor/
+Le reflog permet de retrouver les anciennes positions de `HEAD`, notamment après un reset ou un rebase.
 
-# Build
-dist/
-build/
-*.o
+Il peut ainsi aider à retrouver un commit qui n’apparaît plus dans l’historique de la branche. Cette récupération reste possible tant que le commit est encore disponible dans le dépôt local.
 
-# Secrets
-.env
-*.pem
-*.key
+## À retenir
 
-# OS
-.DS_Store
-Thumbs.db
+- `add`, `commit` et `push` correspondent à trois actions différentes : préparer, enregistrer localement et envoyer.
+- Une branche permet de travailler séparément avant de fusionner les modifications.
+- Une Pull Request permet de proposer une fusion et de faire relire le travail.
+- `reset`, `revert` et `stash` répondent à des besoins différents : revenir en arrière, annuler un commit ou mettre temporairement le travail de côté.
 
-# Logs
-*.log
-```
-
-- Un fichier déjà tracké ne sera pas ignoré par `.gitignore`
-- Pour l'arrêter : `git rm --cached fichier.txt`
+[Retour au README](README.md) · [Consulter les commandes](commandes.md)
